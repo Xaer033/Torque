@@ -1,0 +1,90 @@
+#!/usr/bin/env mkb
+files
+{
+	(source)
+    Torque.cpp
+	
+	[GG/GameObject]
+	Scene.cpp
+	Scene.h
+	GameObject.cpp
+	GameObject.h
+	GameComponent.h
+	MeshRenderer.cpp
+	MeshRenderer.h
+	
+	[GG/Rendering]
+	GeometryBuffer3d.cpp
+	GeometryBuffer3d.h
+	Shader.cpp
+	Shader.h
+	Texture.cpp
+	Texture.h
+	Camera.cpp
+	Camera.h
+	RenderState.cpp
+	RenderState.h
+	Light.h
+	FrameBufferObject.cpp
+	FrameBufferObject.h
+	RenderFactory.cpp
+	RenderFactory.h
+
+
+
+	[GG/Resources]
+	GmbFormat.cpp
+	GmbFormat.h
+	ObjFormat.cpp
+	ObjFormat.h
+
+
+	[GG/Math]
+	Vector.h
+	Vertex.h
+	Matrix.cpp
+	Matrix.h
+	Transform.cpp
+	Transform.h
+	Quaternion.cpp
+	Quaternion.h
+
+
+	[GG/Utility]
+	DebugText.h
+	Time.cpp
+	Time.h
+
+
+	[GG/Rendering/Shaders]
+    (data/shaders)
+    directionalLight.vs
+    directionalLight.ps
+	unlit.vs
+	unlit.ps
+	uberShader.vs
+	uberShader.ps
+	fullScreenShader.vs
+	fullScreenShader.ps
+}
+
+assets
+{
+    (data)
+    shaders
+	textures
+	models
+}
+
+
+
+subprojects
+{
+    iwutil
+	iwgeom
+    iwgl
+}
+
+deployment
+{
+}

@@ -1,0 +1,14 @@
+
+precision mediump float;
+precision lowp int;
+
+
+varying vec4 depthPos;
+
+
+void main()
+{ 
+	float depth = depthPos.z / depthPos.w;
+	gl_FragColor =  vec4( depth, depth, depth, 1 );
+}
+

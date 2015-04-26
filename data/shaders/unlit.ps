@@ -1,0 +1,12 @@
+precision mediump float;
+
+uniform sampler2D mainTex;
+uniform vec4 tintColor;
+varying vec2 uv;
+
+
+void main()
+{ 
+	vec4 texColor = texture2D( mainTex, uv );
+	gl_FragColor = texColor * tintColor;
+}

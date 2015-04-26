@@ -194,3 +194,5 @@ FakesAssemblies/
 
 # Visual Studio 6 workspace options file
 *.opt
+build_torque_vc11/
+ReadMe.Torque.txt

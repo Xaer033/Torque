@@ -1,0 +1,154 @@
+
+precision mediump float;
+precision lowp int;
+
+#define MAX_LIGHTS 4
+
+
+struct LightProperties
+{
+
+	vec4 tintColor;
+	highp vec4 position;
+
+	float intensity;
+	float radius;
+};
+
+
+
+
+uniform sampler2D	diffuseTex;
+uniform sampler2D	specularTex;
+uniform sampler2D	normalTex;
+uniform sampler2D	depthTex;
+
+uniform vec4		cameraPos;
+
+///Max of 4 lights affecting pixels
+uniform float	lightCount;
+uniform LightProperties	lights[ MAX_LIGHTS ];
+
+
+
+
+
+varying vec4 vPos;
+varying vec2 uv;
+varying vec4 normal;
+varying mat3 tbnMat;
+
+varying vec4 shadowCoord[ MAX_LIGHTS ];
+
+
+
+
+float phongSpecularTerm( float specularPower, vec3 normal, vec3 viewDir, vec3 lightDirection )
+{
+    vec3 halfV		= normalize( lightDirection + viewDir );
+	float NdotHV	= max( dot( halfV, normal ), 0.0 );
+
+    return pow( NdotHV, specularPower );
+}
+
+float phongDiffuseTerm( vec3 normal, vec3 lightDirection )
+{
+	return max( dot( normal, lightDirection ), 0.0 );
+}
+
+
+vec3 getTextureNormals( mat3 tbnMatrix )
+{
+	vec4 normalColor	=  2.0 * texture2D( normalTex, uv ) - 1.0;
+	return normalize( vec3(  tbnMat * normalColor.xyz ) );
+}
+
+float getShadowTerm( vec4 shadowCoords )
+{
+	vec4 shadowCoordinateWdivide = shadowCoords / shadowCoords.w;
+	// Used to lower moiré pattern and self-shadowing
+	shadowCoordinateWdivide.z += 0.0005;
+	float distanceFromLight = texture2D( depthTex,  shadowCoordinateWdivide.xy ).r;
+	
+	float shadow = 1.0;
+	if( shadowCoords.w > 0.0 )
+		shadow = distanceFromLight < shadowCoords.z ? 0.0 : 1.0 ;
+		
+	return shadow;
+}
+
+
+void main()
+{ 
+	vec4 diffuseColor	= texture2D( diffuseTex, uv );
+	vec4 specularColor	= texture2D( specularTex, uv );
+	
+
+#ifdef USE_NORMALMAP
+	vec3 n			= getTextureNormals( tbnMat );
+#else
+	vec3 n			= normalize( normal.xyz );
+#endif
+
+	vec3 viewDir	= normalize( cameraPos.xyz - vPos.xyz );
+
+    vec4 finalAmbient	= vec4( diffuseColor * 0.1 );
+	vec4 finalColor		= vec4( 0 );
+
+	
+	///Accumulate all the lights
+
+	for( int i = 0; i < 1; ++i )
+	{
+		float r = lights[i].radius;
+
+
+		vec4 lightP		= lights[i].position;
+		vec3 nLightDir	= ( lightP.w < 0.5 ) ? 
+							lightP.xyz : lightP.xyz - vPos.xyz;
+
+		float dist		= length( nLightDir );
+		nLightDir		= normalize( nLightDir );
+
+		float dTerm		= phongDiffuseTerm( n, nLightDir );
+		vec4 diffuse	= ( diffuseColor * dTerm );
+
+		vec4 specular	= vec4( 0 );
+
+		
+		float specularRange = 75.0;
+		float specTerm = phongSpecularTerm( specularColor.r * specularRange, n, viewDir, nLightDir );
+		specular = specularColor * max( specTerm, 0.0 );
+	
+		
+		float attinuation = 1.0;
+		
+		///Attinuation for pointlights / spotlights
+		if( lightP.w > 0.5 )
+		{
+			//attinuation = 1.0 / ( 0.01 + dist );
+			const float cutoff = 0.02;
+			
+			
+			float d = max( dist - r, 0.0 );
+			vec3 L	= nLightDir / dist;
+			 
+			// calculate basic attenuation
+			float denom = d / r + 1.0;
+			attinuation = 1.0 / (denom * denom);
+			attinuation = ( attinuation - cutoff ) / ( 1.0 - cutoff );
+			attinuation = max( attinuation, 0.0 );
+		}
+		
+		
+		
+		finalColor += ( diffuse + specular ) * lights[i].tintColor;// * lights[i].intensity * attinuation;// * getShadowTerm( shadowCoord[i] );
+	}
+	
+	
+
+	
+	  	
+
+	gl_FragColor =  finalAmbient + finalColor;
+}
