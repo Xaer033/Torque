@@ -106,7 +106,7 @@ namespace GG
 
 		}
 
-		void setBlendmode( BlendMode mode )
+		void setBlendmode( const BlendMode mode )
 		{
 			if( _cachedBlendmode == mode )
 				return;
@@ -119,28 +119,17 @@ namespace GG
 				glDisable( GL_BLEND );
 				return;
 			}
+				
 
 			glEnable( GL_BLEND );
 
 			switch( mode )
 			{
-			case BM_ALPHA:
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-				break;
-
-			case BM_ADDITIVE:
-				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-				break;
-
-			case BM_MULTIPLY:
-				glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );
-				break;
-
-			case BM_SCREEN:
-				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );
-				break;
+				case BM_ALPHA:		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );	break;
+				case BM_ADDITIVE:	glBlendFunc( GL_SRC_ALPHA, GL_ONE );					break;
+				case BM_MULTIPLY:	glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );	break;
+				case BM_SCREEN:		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );			break;
 			}
-
 		}
 
 
@@ -359,7 +348,7 @@ namespace GG
 		_impl->setCullMode( cullMode );
 	}
 
-	void RenderState::setBlendmode( BlendMode mode )
+	void RenderState::setBlendmode( const BlendMode mode )
 	{
 		_impl->setBlendmode( mode );
 	}

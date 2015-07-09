@@ -1,4 +1,12 @@
 #!/usr/bin/env mkb
+
+includepaths
+{
+	"source"
+	"include"
+}
+
+
 files
 {
 	(source)
@@ -58,14 +66,8 @@ files
 
 	[GG/Rendering/Shaders]
     (data/shaders)
-    directionalLight.vs
-    directionalLight.ps
-	unlit.vs
-	unlit.ps
-	uberShader.vs
-	uberShader.ps
-	fullScreenShader.vs
-	fullScreenShader.ps
+    "*.vs"
+    "*.ps"
 }
 
 assets
@@ -83,6 +85,7 @@ subprojects
     iwutil
 	iwgeom
     iwgl
+	spine
 }
 
 deployment

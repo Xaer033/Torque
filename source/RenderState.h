@@ -69,7 +69,7 @@ namespace GG
 		void setClearColor( float r, float g, float b, float a );
 		void setClearColor( Vector4 clearColor );
 
-		void setBlendmode( BlendMode mode );
+		void setBlendmode( const BlendMode mode );
 
 		void setRenderSize( int width, int height );
 		void setViewport( float x, float y, float width, float height );

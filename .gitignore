@@ -196,3 +196,6 @@ FakesAssemblies/
 *.opt
 build_torque_vc11/
 ReadMe.Torque.txt
+build_torque_vc12x/
+build_torque_vc12_wp8toolset/
+build_torque_vc12_ws8toolset/

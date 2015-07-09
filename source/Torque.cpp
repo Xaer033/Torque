@@ -29,6 +29,44 @@
 
 
 
+#include <spine/spine.h>
+#include <spine/extension.h>
+
+void _spAtlasPage_createTexture(spAtlasPage* self, const char* path) 
+{
+	/*CIwTexture *texture = new CIwTexture();
+	texture->LoadFromFile(path);
+	texture->SetClamping(true);
+	texture->SetMipMapping(false);
+	texture->SetFiltering(true);
+	texture->Upload();
+
+	self->rendererObject = texture;
+	self->width = texture->GetWidth();
+	self->height = texture->GetHeight();*/
+}
+
+void _spAtlasPage_disposeTexture(spAtlasPage* self) 
+{/*
+	if (self->rendererObject)
+		delete static_cast<CIwTexture*>(self->rendererObject);*/
+}
+
+char* _spUtil_readFile(const char* path, int* length)
+{
+	/*s3eFile *f = s3eFileOpen(path, "rb");
+	if (f)
+	{
+		*length = s3eFileGetSize(f);
+		char *buffer = (char *)malloc(*length);
+		*length = s3eFileRead(buffer, 1, *length, f);
+		return buffer;
+	}
+*/
+	return  NULL;
+}
+
+
 std::string loadFile( const char * filename )
 {
 	std::ifstream in( filename, std::ios::in | std::ios::binary );
@@ -253,7 +291,7 @@ int main()
 	mainCamera->setDepth( 0 );
 	mainCamera->setClearMode(  GG::CM_COLOR | GG::CM_DEPTH  );
 	mainCamera->setClearColor( Vector4( 0.6f, 0.5f, 0.273f, 1 ) );
-	mainCamera->setPerspective( 60.0f , width, height, 0.1f, 50 );
+	mainCamera->setPerspective( 60.0f , width, height, 0.1f, 100.0f );
 	mainCamera->transform.setPosition( Vector3( 0, 15, 15 ) );
 	mainCamera->setViewport( 0, 0, 1, 1 );
 
