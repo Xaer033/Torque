@@ -92,7 +92,7 @@ void main()
 
 	vec3 viewDir	= normalize( cameraPos.xyz - vPos.xyz );
 
-    vec4 finalAmbient	= vec4( diffuseColor * 0.1 );
+    vec4 finalAmbient	= vec4( diffuseColor * 0.2 );
 	vec4 finalColor		= vec4( 0 );
 
 	
@@ -142,13 +142,8 @@ void main()
 		
 		
 		
-		finalColor += ( diffuse + specular ) * lights[i].tintColor;// * lights[i].intensity * attinuation;// * getShadowTerm( shadowCoord[i] );
+		finalColor += ( diffuse + specular ) * lights[i].tintColor * lights[i].intensity * attinuation;// * getShadowTerm( shadowCoord[i] );
 	}
 	
-	
-
-	
-	  	
-
-	gl_FragColor =  finalAmbient + finalColor;
+	gl_FragColor =  finalColor;
 }

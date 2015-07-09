@@ -144,7 +144,7 @@ namespace GG
 			Vector2 xVec = Vector2( x,  width ) * (float)_renderWidth;
 			Vector2 yVec = Vector2( y , height ) * (float)_renderHeight;
 
-			glViewport( xVec.x, yVec.x, xVec.y, yVec.y );
+			glViewport((GLint)xVec.x, (GLint)yVec.x, (GLsizei)xVec.y, (GLsizei)yVec.y );
 		}
 
 

@@ -63,6 +63,7 @@ char* _spUtil_readFile(const char* path, int* length)
 		return buffer;
 	}
 */
+
 	return  NULL;
 }
 
@@ -290,8 +291,8 @@ int main()
 	GG::Camera * mainCamera = world.addCamera( "main" );
 	mainCamera->setDepth( 0 );
 	mainCamera->setClearMode(  GG::CM_COLOR | GG::CM_DEPTH  );
-	mainCamera->setClearColor( Vector4( 0.6f, 0.5f, 0.273f, 1 ) );
-	mainCamera->setPerspective( 60.0f , width, height, 0.1f, 100.0f );
+	mainCamera->setClearColor( Vector4( 0.6f, 0.5f, 0.273f, 1.0f ) );
+	mainCamera->setPerspective( 60.0f , (float)width, (float)height, 0.1f, 100.0f );
 	mainCamera->transform.setPosition( Vector3( 0, 15, 15 ) );
 	mainCamera->setViewport( 0, 0, 1, 1 );
 
@@ -322,12 +323,12 @@ int main()
 	GG::DirectionLight * dLight	= (GG::DirectionLight *)world.addLight("dLight", GG::LT_DIRECTIONAL,  Vector3( 1, 1, 5 ) );
 	//dLight->radius = 6;
 	dLight->color = Vector4( 1, 0.7, 0.5, 1 );
-	dLight->intensity = 2.0f;
+	dLight->intensity = 1.0f;
 
 	GG::PointLight * pLight = (GG::PointLight *)world.addLight("pLight", GG::LT_POINT,  Vector3( 5, 3, -5 ) );
-	pLight->radius = 6.0;
+	pLight->radius = 3.0;
 	pLight->color = Vector4(0.35, 1, 0.44, 1 );
-	pLight->intensity = 4.0f;
+	pLight->intensity = 3.0f;
 
 	float timer = 0;
 

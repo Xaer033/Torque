@@ -305,20 +305,20 @@ namespace GG
 
 
 			
-			if( abs( tangent.x ) < 0.01f && abs( tangent.y ) < 0.01f && abs( tangent.z ) )
+			if( fabs( tangent.x ) < 0.01f && fabs( tangent.y ) < 0.01f && fabs( tangent.z ) )
 			{
 				text << "Zero tangent!";
 				text.print();
 			}
 
-			v[0].tangent	= v[1].tangent	 = v[2].tangent		=  tangent;
-			v[0].biTangent	= v[1].biTangent = v[2].biTangent	=  biTangent;
+			//v[0].tangent	= v[1].tangent	 = v[2].tangent		=  tangent;
+			//v[0].biTangent	= v[1].biTangent = v[2].biTangent	=  biTangent;
 
 	
 			for( uint j = 0; j < 3; ++j )
 			{
-				_vertexList[i + j].tangent		= v[j].tangent;
-				_vertexList[i + j].biTangent	= v[j].biTangent;
+				_vertexList[i + j].tangent		= tangent;
+				_vertexList[i + j].biTangent	= biTangent;
 			}
 		}
 	}

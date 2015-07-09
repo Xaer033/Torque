@@ -16,11 +16,11 @@
 # Some conditional operations are also permitted, see the
 # S3E documentation for details.
 [S3E]
-MemSize 	= 20000000
+MemSize 	= 40000000
 DispFixRot 	= Landscape
 
-WinWidth=800
-WinHeight=600
+WinWidth=1024
+WinHeight=768
 
 [GL]
 AndroidSurfaceHolder=1
