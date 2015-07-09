@@ -1,31 +1,45 @@
-[Util]
-#MemoryBreakpoint=8479
-#MemMgrMaxAllocWarning=0
+# This file is for configuration settings for your
+# application.
+#
+# The syntax is similar to windows .ini files ie
+#
+# [GroupName]
+# Setting = Value
+#
+# Which can be read by your application using
+#  e.g s3eConfigGetString("GroupName", "Setting", string)
+#
+# All settings must be documented in .config.txt files.
+# New settings specific to this application should be
+# documented in app.config.txt
+#
+# Some conditional operations are also permitted, see the
+# S3E documentation for details.
+[S3E]
+MemSize 	= 20000000
+DispFixRot 	= Landscape
 
-[S3E]  
-SplashscreenBkR=0
-SplashscreenBkG=0
-SplashscreenBkB=0
+WinWidth=800
+WinHeight=600
 
-MemSize=10000000
-MemSizeDebug=10000000
+[GL]
+AndroidSurfaceHolder=1
+# Select an RGBA8888 screen display
+EGL_RED_SIZE=8
+EGL_GREEN_SIZE=8
+EGL_BLUE_SIZE=8
+EGL_ALPHA_SIZE=8
+ 
+ #VirtualWidth = 1024	
+ #VirtualHeight = 768
 
-SysAppNeverSleep=0
+# Set a 24 bit depth buffer
+EGL_DEPTH_SIZE=24
+ 
+# Enable anti aliasing
+EGL_SAMPLE_BUFFERS = 1
+ 
+# Set type of anti aliasing (1 = none, 2 = multi-sampling, 4 = super-sampling)
+EGL_SAMPLES=4
 
-DisableAccelerometer=1
-DisableContacts=1
-DisableVibra=1
-DisableVideo=1
-#DisableGL=1
-
-#TraceToFile=1
-
-DispFixRot=FixedPortrait
-IOSDispScaleFactor=200
-
-SysGlesVersion=2
-
-[GX]
-NumTPages=400
-DataCacheSize=1000000
-VertCacheSize=200000
+AllowNoDepthBufferClear = 1
