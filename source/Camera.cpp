@@ -119,6 +119,11 @@ namespace GG
 		return _cachedViewport;
 	}
 
+    Matrix4 Camera::getModelViewProjection( const Transform & model )
+    {
+        return getProjectionMatrix() * getViewMatrix() * model.getMatrix();
+    }
+
 	Matrix4 & Camera::getViewMatrix( ) 
 	{
 		_viewMatrix = glm::inverse( transform.getMatrix() );

@@ -429,7 +429,7 @@ int main()
 		mainCamera->transform.lookAt( playerObj->transform.getPosition() + Vector3( 0, 5, 0 ) );
 		
 
-		//Vector3 camPos	= miniMapCamera->transform.getPosition();
+		//Vector3 camPos	= miniMapCamera->transformFgetPosition();
 		//camPos.x		= playerObj->transform.getPosition().x;
 		//camPos.z		= playerObj->transform.getPosition().z;
 		//miniMapCamera->transform.setPosition( camPos );

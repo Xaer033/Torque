@@ -27,6 +27,9 @@ namespace GG
 		void setImage( CIwImage & image );
 		bool loadFromFile( const char * location );
 
+        uint getWidth()  const;
+        uint getHeight() const;
+
 		void setHandle( const uint handle );
 		uint getHandle() const;
 

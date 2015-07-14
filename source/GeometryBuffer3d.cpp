@@ -39,6 +39,7 @@ namespace GG
 		
 		void clearVertices();
 
+
 		void addPosition( const Vector3 & p );
 		void pushTexCoord( const Vector2 & t );
 		void pushNormal( const Vector3 & n );
@@ -47,11 +48,11 @@ namespace GG
 		void pushBiTangent( const Vector3 & b );
 
 		
-		void merge( const GeometryBuffer3dImpl & buffer );
+        void merge( const GeometryBuffer3dImpl & buffer );
 		
 		
-		void build( );
-		void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount );
+        void build( DrawHint drawHint = D_STATIC );
+        void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount, DrawHint drawHint );
 		
 		void _generateTangents();
 
@@ -150,14 +151,16 @@ namespace GG
 	}
 
 
-	void GeometryBuffer3d::build()
+    void GeometryBuffer3d::build( DrawHint drawHint  )
 	{
-		_impl->build();
+		_impl->build( drawHint );
 	}
 
-	void GeometryBuffer3d::build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount )
+    void GeometryBuffer3d::build( Vertex    * vertexList,   uint vertCount, 
+                                  uint      * indexList,    uint indexCount, 
+                                  DrawHint  drawHint  )
 	{
-		_impl->build( vertexList, vertCount, indexList, indexCount );
+		_impl->build( vertexList, vertCount, indexList, indexCount, drawHint );
 	}
 
 	uint * GeometryBuffer3d::getIndexArray() const
@@ -267,7 +270,6 @@ namespace GG
 	void GeometryBuffer3dImpl::_generateTangents( )
 	{
 		Vertex v[3];
-		DebugText text("boom");
 
 		for( uint i = 0; i < _vertexList.size(); i += 3 )
 		{
@@ -307,8 +309,8 @@ namespace GG
 			
 			if( fabs( tangent.x ) < 0.01f && fabs( tangent.y ) < 0.01f && fabs( tangent.z ) )
 			{
-				text << "Zero tangent!";
-				text.print();
+				//text << "Zero tangent!";
+				//text.print();
 			}
 
 			//v[0].tangent	= v[1].tangent	 = v[2].tangent		=  tangent;
@@ -363,7 +365,7 @@ namespace GG
 
 	
 
-	void GeometryBuffer3dImpl::build()
+    void GeometryBuffer3dImpl::build( DrawHint drawHint  )
 	{
 
 		_generateIndices();
@@ -371,20 +373,26 @@ namespace GG
 		if( vertexProperties & TANGENTS )
 			_generateTangents();
 
-		glGenBuffers( 1, &vertexBuffer );
-		glGenBuffers( 1, &indexBuffer );
+        if( vertexBuffer == 0 )
+		    glGenBuffers( 1, &vertexBuffer );
+
+        if( indexBuffer == 0 )
+		    glGenBuffers( 1, &indexBuffer );
 		
 
-		glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer);
-		glBufferData( GL_ARRAY_BUFFER, sizeof( Vertex ) * _vertexList.size(), &_vertexList[0], GL_STATIC_DRAW );
+        glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
+        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), NULL, drawHint );
+        glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[ 0 ] );
 
 
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( GLuint ) * _indexList.size(), &_indexList[0], GL_STATIC_DRAW );
-
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer );
+        glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), NULL, drawHint );
+        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] );
 	}
 
-	void GeometryBuffer3dImpl::build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount )
+	void GeometryBuffer3dImpl::build( Vertex    * vertexList,   uint vertCount, 
+                                      uint      * indexList,    uint indexCount,
+                                      DrawHint drawHint )
 	{
 
 		_vertexList.clear();
@@ -406,17 +414,21 @@ namespace GG
 		if( vertexProperties & TANGENTS )
 			_generateTangents();
 
+        if( vertexBuffer == 0 )
+		    glGenBuffers( 1, &vertexBuffer );
 
-		glGenBuffers( 1, &vertexBuffer );
-		glGenBuffers( 1, &indexBuffer );
+        if( indexBuffer == 0 )
+		    glGenBuffers( 1, &indexBuffer );
 		
 
 		glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer);
-		glBufferData( GL_ARRAY_BUFFER, sizeof( Vertex ) * _vertexList.size(), &_vertexList[0], GL_STATIC_DRAW );
+        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), NULL, drawHint );
+		glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[0] );
 
 
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( GLuint ) * _indexList.size(), &_indexList[0], GL_STATIC_DRAW );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), NULL, drawHint );
+        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] );
 
 	}
 

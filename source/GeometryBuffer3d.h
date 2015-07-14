@@ -11,6 +11,7 @@
 #include "Vector.h"
 #include "Vertex.h"
 #include "IwTypes.h"
+#include "IwGL.h"
 
 namespace GG
 {
@@ -25,7 +26,12 @@ namespace GG
 		BITANGENTS	= 1 << 5
 	};
 
-
+    enum DrawHint
+    {
+        D_STATIC    = GL_STATIC_DRAW,
+        D_DYNAMIC   = GL_DYNAMIC_DRAW,
+        D_STREAM    = GL_STREAM_DRAW
+    };
 
 	class GeometryBuffer3dImpl;
 
@@ -51,8 +57,8 @@ namespace GG
 		void pushTangent( const Vector3 & t );
 		void pushBitangent( const Vector3 & b );
 
-		void build();
-		void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount );
+		void build( DrawHint drawHint = D_STATIC );
+        void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount, DrawHint drawHint = D_STATIC );
 
 		void merge( const GeometryBuffer3d & buffer );
 

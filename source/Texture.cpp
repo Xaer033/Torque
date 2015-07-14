@@ -38,16 +38,31 @@ namespace GG
 
 	bool Texture::loadFromFile( const char * location )
 	{
-		if( _image )
-			delete( _image );
+		if( !_image )
+			_image = new CIwImage();
 
-		_image = new CIwImage();
 		_image->LoadFromFile( location );
 		
 		_createVRAMTexture();
+
 		return true;
 	}
 
+    uint Texture::getWidth() const
+    {
+        if( _image )
+            return _image->GetWidth();
+
+        return 0;
+    }
+
+    uint Texture::getHeight() const
+    {
+        if( _image )
+            return _image->GetHeight();
+
+        return 0;
+    }
 
 	void Texture::setHandle( const uint handle )
 	{
@@ -70,10 +85,7 @@ namespace GG
 			return false;
 
 		
-		int interalFormat = GL_RGB;
-
-		if( _image->HasAlpha() == 1 )
-			interalFormat = GL_RGBA;
+		int interalFormat = ( _image->HasAlpha() > 0 ) ? GL_RGBA : GL_RGB;
 
 		if( !_handle )
 			glGenTextures( 1, &_handle );
@@ -84,8 +96,8 @@ namespace GG
 		glTexImage2D( GL_TEXTURE_2D, 0, interalFormat, _image->GetWidth(), _image->GetHeight(), 0, interalFormat, GL_UNSIGNED_BYTE, _image->GetTexels() );
 		glGenerateMipmap( GL_TEXTURE_2D );
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 

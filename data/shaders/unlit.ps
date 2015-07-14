@@ -7,6 +7,9 @@ varying vec2 uv;
 
 void main()
 { 
-	vec4 texColor = texture2D( mainTex, uv );
-	gl_FragColor = texColor * tintColor;
+    vec2 newUV = uv;
+    newUV.y = 1.0 - uv.y;
+
+	vec4 texColor = texture2D( mainTex, newUV );
+	gl_FragColor = texColor;// * tintColor;
 }

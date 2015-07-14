@@ -239,13 +239,19 @@ namespace GG
 	void Transform::_updateChildren()
 	{
 		//Loop threw children to update them
-		std::list<Transform*>::iterator it;
-		for( it = _childrenList.begin(); it != _childrenList.end(); ++it )
-		{
-			if( *it )
-				(*it)->_updateHierarchy( );
-			else
-				_childrenList.erase( it );
+        std::list<Transform*>::iterator it = _childrenList.begin();
+
+        while( it != _childrenList.end() )
+        {
+            if( *it )
+            {
+                ( *it )->_updateHierarchy();
+                ++it;
+            }
+            else
+            {
+                it = _childrenList.erase( it );
+            }
 		}
 	}
 }

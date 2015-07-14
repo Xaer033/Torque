@@ -49,6 +49,7 @@ namespace GG
 		void	setViewport( float x, float y, float width, float height );
 		Vector4 getViewport( ) const;
 
+        Matrix4     getModelViewProjection( const Transform & model );
 
 		Matrix4	&	getViewMatrix();
 		Matrix4 &	getProjectionMatrix();
