@@ -12,25 +12,16 @@
 #include "IwGL.h"
 
 #include "Vector.h"
+#include <IVertexBuffer.h>
 
 namespace GG
 {
 
-	enum DrawMode
-	{
-		POINTS = 0,
-		LINES,
-		LINE_LOOP,
-		LINE_STRIP,
-		TRIANGLE_LIST,
-		TRIANGLE_STRIP,
-		TRIANGLE_FAN,
-	};
 
 
-	enum BlendMode
+    enum class BlendMode
 	{
-		BM_NONE = 0,
+		BM_NONE     = 0,
 		BM_ALPHA,
 		BM_ADDITIVE,
 		BM_MULTIPLY,
@@ -44,9 +35,9 @@ namespace GG
 		CM_STENCIL	= GL_STENCIL_BUFFER_BIT
 	};
 
-	enum CullMode
+    enum class CullMode
 	{
-		CULL_NONE,
+		CULL_NONE   = 0,
 		CULL_FRONT	= GL_FRONT,
 		CULL_BACK	= GL_BACK,
 		CULL_FRONT_AND_BACK = GL_FRONT_AND_BACK
@@ -55,7 +46,7 @@ namespace GG
 	class RenderStateImpl;
 
 	class Texture;
-	class GeometryBuffer3d;
+	class IVertexBuffer;
 	class Shader;
 	class FrameBufferObject;
 
@@ -66,8 +57,8 @@ namespace GG
 		~RenderState();
 
 		void clear( int mode );
-		void setClearColor( float r, float g, float b, float a );
-		void setClearColor( Vector4 clearColor );
+		void setClearColor( float r, float g, float b, float a ) const;
+		void setClearColor( const Vector4 & clearColor ) const;
 
 		void setBlendmode( const BlendMode mode );
 
@@ -79,9 +70,10 @@ namespace GG
 
 		void setCullMode( const CullMode cullMode );
 
-		void bindGeometry3d( GeometryBuffer3d & geoBuffer );
+		void bindVertexBuffer( IVertexBuffer & geoBuffer );
 		void bindTexture2d( uint samplerID, const Texture & texture );
 		void bindShader( const Shader & shader );
+
 		void bindFrameBuffer( const uint & frameBuffer  );
 		void bindFrameBuffer( const FrameBufferObject & frameBuffer  );
 

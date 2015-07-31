@@ -1,1 +1,1 @@
-VC11;build_torque_vc11;
+VC12X;build_torque_vc12x;

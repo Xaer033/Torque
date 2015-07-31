@@ -13,73 +13,73 @@
 #include "IwTypes.h"
 #include "IwGL.h"
 
+#include <IVertexBuffer.h>
+#include <vector>
+
 namespace GG
 {
 
-	enum VertexProperty
-	{
-		POSITIONS	= 1 << 0,
-		TEXCOORDS	= 1 << 1,
-		NORMALS		= 1 << 2,
-		COLORS		= 1 << 3,
-		TANGENTS	= 1 << 4,
-		BITANGENTS	= 1 << 5
-	};
-
-    enum DrawHint
-    {
-        D_STATIC    = GL_STATIC_DRAW,
-        D_DYNAMIC   = GL_DYNAMIC_DRAW,
-        D_STREAM    = GL_STREAM_DRAW
-    };
-
-	class GeometryBuffer3dImpl;
-
-
-
-	class GeometryBuffer3d
+	class GeometryBuffer3d : public IVertexBuffer
 	{
 	public:
-
-		GeometryBuffer3d(void);
-		~GeometryBuffer3d(void);
-
-
-		void setVertexProperties( int vertProps);
-		int  getVertexProperties() const;
-		
-		void clearVertices();
-
-		void addPosition( const Vector3 & p );
-		void pushTexCoord( const Vector2 & t );
-		void pushNormal( const Vector3 & n );
-		void pushColor(	const Vector4 & t );
-		void pushTangent( const Vector3 & t );
-		void pushBitangent( const Vector3 & b );
-
-		void build( DrawHint drawHint = D_STATIC );
-        void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount, DrawHint drawHint = D_STATIC );
-
-		void merge( const GeometryBuffer3d & buffer );
-
-		uint getVertexHandle() const;
-		uint getIndexHandle() const;
+        typedef std::vector<Vertex>     VertexList;
+        typedef std::vector<GLuint>     IndexList;
 
 
-		uint getIndexCount() const;
-		uint getVertexCount() const;
+		GeometryBuffer3d( );
+		~GeometryBuffer3d( );
 
-		uint	* getIndexArray() const;
-		Vertex	* getVertexArray() const;
+		virtual void        clearVertices();
 
-		//PositionList & getPosition() const;
-		//NormalList & getNormals() const;
-		//TexCoordList & getTexCoords() const;
-		//ColorList & getColorList() const;
-		 
+		virtual void        addPosition(    const Vector3 & p );
+		virtual void        pushTexCoord(   const Vector2 & t );
+		virtual void        pushNormal(     const Vector3 & n );
+		virtual void        pushColor(	    const Vector4 & t );
+		virtual void        pushTangent(    const Vector3 & t );
+		virtual void        pushBitangent(  const Vector3 & b );
+
+		virtual void        build( const DrawHint drawHint = D_STATIC );
+
+        virtual void        render( const DrawMode & drawMode ) const;
+
+        virtual void        bind() const;
+
+
+        void                merge( const   GeometryBuffer3d &  buffer );
+
+        void                build( Vertex   *   vertexList, uint vertCount,
+                                   uint     *   indexList, uint indexCount,
+                                   DrawHint     drawHint = D_STATIC );
+
+
+        Vertex  *           getVertexArray();
+        uint    *           getIndexArray();
+
+
+        uint                getIndexCount()     const;
+        uint                getVertexCount()    const;
+
 	private:
-		GeometryBuffer3dImpl * _impl;
 
+        VertexList		    _vertexList;
+        IndexList		    _indexList;
+
+        GLuint              _indexBufferHandle;
+        GLuint              _vertexBufferHandle;
+        GLuint              _arrayBufferHandle;
+
+
+        Vector2             _currentTexCoord;
+        Vector3             _currentNormal;
+        Vector4             _currentColor;
+        Vector3             _currentTangent;
+        Vector3             _currentBitangent;
+
+
+        void                _generateTangents();
+        void                _generateIndices();
+
+        bool                _isSameVertex( const Vertex &   v1, const Vertex &  v2 )    const;
 	};
 }
 

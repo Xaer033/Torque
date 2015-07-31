@@ -10,7 +10,7 @@ includepaths
 files
 {
 	(source)
-    Torque.cpp
+	test.cpp
 	
 	[GG/GameObject]
 	Scene.cpp
@@ -37,8 +37,8 @@ files
 	FrameBufferObject.h
 	RenderFactory.cpp
 	RenderFactory.h
-
-
+	"IVertexBuffer.*"
+	"StreamVertexBuffer.*"
 
 	[GG/Resources]
 	GmbFormat.cpp
@@ -76,6 +76,7 @@ assets
     shaders
 	textures
 	models
+	spine
 }
 
 

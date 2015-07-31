@@ -5,15 +5,16 @@
 #include <hash_map>
 
 
-#include "IwGL.h"
-#include "IwGLExt.h"
-#include "Shader.h"
-#include "GeometryBuffer3d.h"
-#include "Texture.h"
-#include "FrameBufferObject.h"
+#include <IwGL.h>
+#include <IwGLExt.h>
+#include <Shader.h>
+#include <IVertexBuffer.h>
+
+#include <Texture.h>
+#include <FrameBufferObject.h>
 
 
-#define BUFFER_OFFSET(i) ((void*)(i))
+//#define BUFFER_OFFSET(i) ((void*)(i))
 
 
 namespace GG
@@ -26,7 +27,7 @@ namespace GG
 	{
 	public:
 
-		GeometryBuffer3d *	_cachedGeoBuffer3d;
+		IVertexBuffer *	    _cachedVertexBuffer;
 		uint				_cachedShader;
 
 		TextureCache		_cachedTextures;
@@ -59,12 +60,12 @@ namespace GG
 			glClear( mode );
 		}
 
-		void setClearColor( float r, float g, float b, float a )
+		void setClearColor( float r, float g, float b, float a ) const
 		{
 			glClearColor( r, g, b, a );
 		}
 
-		void setClearColor( Vector4 clearColor )
+		void setClearColor( const Vector4 & clearColor ) const
 		{
 			setClearColor( clearColor.r, clearColor.g, clearColor.b, clearColor.a );
 		}
@@ -92,14 +93,14 @@ namespace GG
 			if( _cachedCullMode == cullMode )
 				return;
 
-			if( cullMode == CULL_NONE ) 
+            if( cullMode == CullMode::CULL_NONE )
 			{
 				glDisable( GL_CULL_FACE );
 			}
 			else
 			{
 				glEnable( GL_CULL_FACE );
-				glCullFace( cullMode );
+				glCullFace( (GLenum)cullMode );
 			}
 
 			_cachedCullMode = cullMode;
@@ -114,7 +115,7 @@ namespace GG
 			_cachedBlendmode = mode;
 
 
-			if( mode == BM_NONE )
+            if( mode == BlendMode::BM_NONE )
 			{
 				glDisable( GL_BLEND );
 				return;
@@ -125,10 +126,10 @@ namespace GG
 
 			switch( mode )
 			{
-				case BM_ALPHA:		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );	break;
-				case BM_ADDITIVE:	glBlendFunc( GL_SRC_ALPHA, GL_ONE );					break;
-				case BM_MULTIPLY:	glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );	break;
-				case BM_SCREEN:		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );			break;
+                case BlendMode::BM_ALPHA:		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );	break;
+				case BlendMode::BM_ADDITIVE:	glBlendFunc( GL_SRC_ALPHA, GL_ONE );					break;
+                case BlendMode::BM_MULTIPLY:	glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );	break;
+                case BlendMode::BM_SCREEN:		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );			break;
 			}
 		}
 
@@ -148,69 +149,14 @@ namespace GG
 		}
 
 
-		void bindGeometry3d( GeometryBuffer3d & buffer )
+		void bindVertexBuffer( IVertexBuffer & buffer )
 		{
-			if( &buffer == _cachedGeoBuffer3d )
+            if( &buffer == _cachedVertexBuffer )
 				return;
 
-			glBindBuffer( GL_ARRAY_BUFFER, buffer.getVertexHandle() );
-			glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer.getIndexHandle() );
+            buffer.bind();
 
-
-			glEnableVertexAttribArray( PositionTag );
-			glVertexAttribPointer( PositionTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 0 ) );
-			
-			if( buffer.getVertexProperties() & GG::TEXCOORDS )
-			{
-				glEnableVertexAttribArray( TexcoordTag );
-				glVertexAttribPointer( TexcoordTag, 2, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 3 * sizeof( float ) ) );
-			}
-			else
-			{
-				glDisableVertexAttribArray( TexcoordTag );
-			}
-			
-			if( buffer.getVertexProperties() & GG::NORMALS )
-			{
-				glEnableVertexAttribArray( NormalTag );
-				glVertexAttribPointer( NormalTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 5 * sizeof( float ) ) );
-			}
-			else
-			{
-				glDisableVertexAttribArray( NormalTag );
-			}
-			
-			if( buffer.getVertexProperties() & GG::TANGENTS )
-			{
-				glEnableVertexAttribArray( TangentTag );
-				glVertexAttribPointer( TangentTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 8 * sizeof( float ) ) );
-			}
-			else
-			{
-				glDisableVertexAttribArray( TangentTag );
-			}
-
-			if( buffer.getVertexProperties() & GG::BITANGENTS )
-			{
-				glEnableVertexAttribArray( BitangentTag );
-				glVertexAttribPointer( BitangentTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 11 * sizeof( float ) ) );
-			}
-			else
-			{
-				glDisableVertexAttribArray( BitangentTag );
-			}
-
-			if( buffer.getVertexProperties() & GG::COLORS )
-			{
-				glEnableVertexAttribArray( ColorTag );
-				glVertexAttribPointer( ColorTag, 4, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 14 * sizeof( float ) ) );
-			}
-			else
-			{
-				glDisableVertexAttribArray( ColorTag );
-			}
-
-			_cachedGeoBuffer3d = &buffer;
+            _cachedVertexBuffer = &buffer;
 		}
 
 
@@ -248,32 +194,10 @@ namespace GG
 
 		void renderBoundGeometry( DrawMode mode )
 		{
-			if( _cachedGeoBuffer3d == NULL )
+            if( _cachedVertexBuffer == NULL )
 				return;
 
-
-			int glMode = 0;
-
-			switch( mode )
-			{
-			case TRIANGLE_LIST:
-				glMode = GL_TRIANGLES;
-				break;
-			case TRIANGLE_STRIP:
-				glMode = GL_TRIANGLE_STRIP;
-				break;
-			case LINES:
-				glMode = GL_LINES;
-				break;
-			case LINE_STRIP:
-				glMode = GL_LINE_STRIP;
-				break;
-			case LINE_LOOP:
-				glMode = GL_LINE_LOOP;
-				break;
-			}
-
-			glDrawElements( glMode, _cachedGeoBuffer3d->getIndexCount(), GL_UNSIGNED_INT, NULL );
+            _cachedVertexBuffer->render( mode );
 		}
 
 
@@ -281,12 +205,12 @@ namespace GG
 
 		void clearIvars()
 		{
-			_cachedGeoBuffer3d	= NULL;
+            _cachedVertexBuffer = NULL;
 			_cachedShader		= 0;
 
 			_cachedFrameBuffer	= 0;
 
-			_cachedCullMode		= CULL_BACK;
+			_cachedCullMode		= CullMode::CULL_BACK;
 
 			_renderWidth		= IwGLGetInt( IW_GL_WIDTH );
 			_renderHeight		= IwGLGetInt( IW_GL_HEIGHT );
@@ -323,12 +247,12 @@ namespace GG
 		_impl->clear( mode );
 	}
 
-	void RenderState::setClearColor( float r, float g, float b, float a )
+	void RenderState::setClearColor( float r, float g, float b, float a ) const
 	{
 		_impl->setClearColor( r, g, b, a );
 	}
 
-	void RenderState::setClearColor( Vector4 clearColor )
+	void RenderState::setClearColor( const Vector4 & clearColor ) const
 	{
 		_impl->setClearColor( clearColor.r, clearColor.g, clearColor.b, clearColor.a );
 	}
@@ -363,9 +287,9 @@ namespace GG
 		_impl->setViewport( x, y, width, height );
 	}
 
-	void RenderState::bindGeometry3d( GeometryBuffer3d & buffer )
+	void RenderState::bindVertexBuffer( IVertexBuffer & buffer )
 	{
-		_impl->bindGeometry3d( buffer );
+		_impl->bindVertexBuffer( buffer );
 	}
 
 	void RenderState::bindShader( const Shader & shader )

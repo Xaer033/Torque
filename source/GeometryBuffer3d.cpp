@@ -6,12 +6,13 @@
 
 #include "GeometryBuffer3d.h"
 
+#include <IVertexBuffer.h>
+
 #include <vector>
 #include <cmath>
 #include <sstream>
 
-#include <GLES2\gl2.h>
-#include <GLES2\gl2ext.h>
+#include <IwGL.h>
 
 #include "Vertex.h"
 #include "Vector.h"
@@ -23,251 +24,80 @@
 
 namespace GG
 {
-
-
-	typedef std::vector<Vertex> VertexList;
-	typedef std::vector<GLuint> IndexList;
-
-
-
-
-	class GeometryBuffer3dImpl
-	{
-	public:
-		GeometryBuffer3dImpl();
-		~GeometryBuffer3dImpl();
-		
-		void clearVertices();
-
-
-		void addPosition( const Vector3 & p );
-		void pushTexCoord( const Vector2 & t );
-		void pushNormal( const Vector3 & n );
-		void pushColor(	const Vector4 & t );
-		void pushTangent( const Vector3 & t );
-		void pushBiTangent( const Vector3 & b );
-
-		
-        void merge( const GeometryBuffer3dImpl & buffer );
-		
-		
-        void build( DrawHint drawHint = D_STATIC );
-        void build( Vertex * vertexList, uint vertCount, uint * indexList, uint indexCount, DrawHint drawHint );
-		
-		void _generateTangents();
-
-		void _generateIndices();
-		bool _isSameVertex(const Vertex & v1, const Vertex & v2) const;
-
-		VertexList		_vertexList;
-		IndexList		_indexList;
-
-		GLuint indexBuffer;
-		GLuint vertexBuffer;
-		GLuint arrayHandle;
-
-		int vertexProperties;
-
-		Vector2 currentTexCoord;
-		Vector3 currentNormal;
-		Vector4 currentColor;
-		Vector3 currentTangent;
-		Vector3 currentBitangent;
-		 
-	};
-
-
-
-	GeometryBuffer3d::GeometryBuffer3d(void)
-	{
-		_impl = new GeometryBuffer3dImpl();
-	}
-
-
-	GeometryBuffer3d::~GeometryBuffer3d(void)
-	{
-		delete _impl;
-	}
-
-	
-	void GeometryBuffer3d::setVertexProperties( int vertProps)
-	{
-		_impl->vertexProperties = vertProps;
-	}
-
-	int GeometryBuffer3d::getVertexProperties() const
-	{
-		return _impl->vertexProperties;
-	}
-		
-
-	void GeometryBuffer3d::clearVertices()
-	{
-		_impl->clearVertices();
-	}
-
-	void GeometryBuffer3d::addPosition( const Vector3 & p )
-	{
-		_impl->addPosition( p );
-	}
-
-	void GeometryBuffer3d::pushTexCoord( const Vector2 & t )
-	{
-		_impl->pushTexCoord( t );
-	}
-
-	void GeometryBuffer3d::pushNormal( const Vector3 & n )
-	{
-		_impl->pushNormal( n );
-	}
-
-	void GeometryBuffer3d::pushColor(	const Vector4 & c )
-	{
-		_impl->pushColor( c );
-	}
-	void GeometryBuffer3d::pushTangent( const Vector3 & t )
-	{
-		_impl->pushTangent( t );
-	}
-
-
-
-
-	void GeometryBuffer3d::merge( const GeometryBuffer3d & rhb )
-	{
-		_impl->merge( *rhb._impl );
-	}
-
-				    
-
-	uint GeometryBuffer3d::getVertexHandle() const
-	{
-		return _impl->vertexBuffer;
-	}
-
-	uint GeometryBuffer3d::getIndexHandle() const 
-	{
-		return _impl->indexBuffer;
-	}
-
-
-    void GeometryBuffer3d::build( DrawHint drawHint  )
-	{
-		_impl->build( drawHint );
-	}
-
-    void GeometryBuffer3d::build( Vertex    * vertexList,   uint vertCount, 
-                                  uint      * indexList,    uint indexCount, 
-                                  DrawHint  drawHint  )
-	{
-		_impl->build( vertexList, vertCount, indexList, indexCount, drawHint );
-	}
-
-	uint * GeometryBuffer3d::getIndexArray() const
-	{
-		return &_impl->_indexList[0];
-	}
-
-	Vertex * GeometryBuffer3d::getVertexArray() const
-	{
-		return &_impl->_vertexList[0];
-	}
-
-	uint GeometryBuffer3d::getIndexCount() const
-	{
-		return _impl->_indexList.size();
-	}
-
-	uint GeometryBuffer3d::getVertexCount() const
-	{
-		return _impl->_vertexList.size();
-	}
-	/********************************************
-			Geometry Buffer Implementation
-	*********************************************/
-
-	GeometryBuffer3dImpl::GeometryBuffer3dImpl()
+    GeometryBuffer3d::GeometryBuffer3d() : 
+        IVertexBuffer(),        _vertexBufferHandle(0), 
+        _indexBufferHandle(0),  _arrayBufferHandle(0 )
 	{
 		_vertexList.clear();
 		_indexList.clear();
-
-		vertexProperties = POSITIONS;
-
-		//currentTexCoord = Vector2;
-		//currentNormal	= Vector3;
-		//currentColor	= Vector4;
-		//currentTangent	= Vector3;
-		
-		vertexBuffer	= 0;
-		indexBuffer		= 0;
 	}
 
-	GeometryBuffer3dImpl::~GeometryBuffer3dImpl()
+    GeometryBuffer3d::~GeometryBuffer3d()
 	{
-		if( vertexBuffer != 0 )
-			glDeleteBuffers( 1, &vertexBuffer );
+		if( _vertexBufferHandle != 0 )
+            glDeleteBuffers( 1, &_vertexBufferHandle );
 
-		if( indexBuffer != 0 )
-			glDeleteBuffers( 1, &indexBuffer );
+        if( _indexBufferHandle != 0 )
+            glDeleteBuffers( 1, &_indexBufferHandle );
 	}
 
 
-	void GeometryBuffer3dImpl::merge( const GeometryBuffer3dImpl & buffer )
+    void GeometryBuffer3d::merge( const GeometryBuffer3d & buffer )
 	{
 		_vertexList.insert	( _vertexList.end(),	buffer._vertexList.begin(),	buffer._vertexList.end()	);
 		_indexList.insert	( _indexList.end(),		buffer._indexList.begin(),	buffer._indexList.end()		);
 	}
 
 
-	void GeometryBuffer3dImpl::clearVertices()
+    void GeometryBuffer3d::clearVertices()
 	{
 		_vertexList.clear();
 		_indexList.clear();
 	}
 
-	void GeometryBuffer3dImpl::addPosition( const Vector3 & p )
+    void GeometryBuffer3d::addPosition( const Vector3 & p )
 	{
 		Vertex v = 
 		{ 
 			p, 
-			currentTexCoord, 
-			currentNormal,  
-			currentTangent, 
-			currentBitangent,
-			currentColor
+			_currentTexCoord, 
+			_currentNormal,  
+			_currentTangent, 
+			_currentBitangent,
+			_currentColor
 		};
 	
 		_vertexList.push_back( v );
 
 	}
 
-	void GeometryBuffer3dImpl::pushTexCoord( const Vector2 & t )
+    void GeometryBuffer3d::pushTexCoord( const Vector2 & t )
 	{
-		currentTexCoord = t;
+		_currentTexCoord = t;
 	}
 
-	void GeometryBuffer3dImpl::pushNormal( const Vector3 & n )
+    void GeometryBuffer3d::pushNormal( const Vector3 & n )
 	{
-		currentNormal = n;
+		_currentNormal = n;
 	}
 
-	void GeometryBuffer3dImpl::pushColor(	const Vector4 & c )
+    void GeometryBuffer3d::pushColor( const Vector4 & c )
 	{
-		currentColor = c;
+		_currentColor = c;
 	}
 
-	void GeometryBuffer3dImpl::pushTangent( const Vector3 & t )
+    void GeometryBuffer3d::pushTangent( const Vector3 & t )
 	{
-		currentTangent = t;
+		_currentTangent = t;
 	}
 
-	void GeometryBuffer3dImpl::pushBiTangent( const Vector3 & b )
+    void GeometryBuffer3d::pushBitangent( const Vector3 & b )
 	{
-		currentBitangent = b;
+		_currentBitangent = b;
 	}
 
 
-	void GeometryBuffer3dImpl::_generateTangents( )
+    void GeometryBuffer3d::_generateTangents()
 	{
 		Vertex v[3];
 
@@ -325,74 +155,41 @@ namespace GG
 		}
 	}
 
-	void GeometryBuffer3dImpl::_generateIndices()
-	{
-		_indexList.clear();
-
-		std::vector< Vertex > newVertList;
-		DebugText debugText;
-
-		for( uint i = 0; i < _vertexList.size(); ++i )
-		{
-			bool repeated = false;
-
-			///FLip uv's for openGL
-			_vertexList[i].texCoord.y = 1 - _vertexList[i].texCoord.y;
-
-			for( uint j = 0; j < newVertList.size(); ++j )
-			{
-			
-				repeated = _isSameVertex( _vertexList[i], newVertList[j] );
-
-				if( repeated ) 
-				{ 
-					_indexList.push_back( j );
-					break; 
-				}
-			}
-
-
-			if( !repeated ) 
-			{
-				newVertList.push_back( _vertexList[i] );
-				_indexList.push_back( newVertList.size() - 1 );
-			}
-		}
-
-		_vertexList = newVertList;
-	}
+    
 
 
 	
 
-    void GeometryBuffer3dImpl::build( DrawHint drawHint  )
+    void GeometryBuffer3d::build( DrawHint drawHint )
 	{
 
 		_generateIndices();
 		
-		if( vertexProperties & TANGENTS )
+		if( getVertexProperties() & TANGENTS )
 			_generateTangents();
 
-        if( vertexBuffer == 0 )
-		    glGenBuffers( 1, &vertexBuffer );
+        if( _vertexBufferHandle == 0 )
+            glGenBuffers( 1, &_vertexBufferHandle );
 
-        if( indexBuffer == 0 )
-		    glGenBuffers( 1, &indexBuffer );
+        if( _indexBufferHandle == 0 )
+            glGenBuffers( 1, &_indexBufferHandle );
 		
+        int vCount = getVertexCount();
+        int iCount = getIndexCount();
 
-        glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer );
-        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), NULL, drawHint );
-        glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[ 0 ] );
+        glBindBuffer( GL_ARRAY_BUFFER,          _vertexBufferHandle );
+        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), &_vertexList[ 0 ], drawHint );
+        //glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[ 0 ] );
 
 
-        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer );
-        glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), NULL, drawHint );
-        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] );
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER,          _indexBufferHandle );
+        glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] , drawHint );
+       // glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] );
 	}
 
-	void GeometryBuffer3dImpl::build( Vertex    * vertexList,   uint vertCount, 
-                                      uint      * indexList,    uint indexCount,
-                                      DrawHint drawHint )
+    void GeometryBuffer3d::build( Vertex    * vertexList,   uint vertCount,
+                                  uint      * indexList,    uint indexCount,
+                                  DrawHint drawHint )
 	{
 
 		_vertexList.clear();
@@ -401,40 +198,131 @@ namespace GG
 			_vertexList.push_back( vertexList[ i ] );
 
 
-		if( indexList == NULL || indexCount == 0 )
-			_generateIndices();
+        if( indexList == NULL || indexCount == 0 )
+        {
+            _generateIndices();
+        }
 		else
 		{
 			_indexList.clear();
+
 			for( uint i = 0; i < indexCount; ++i )
 				_indexList.push_back( indexList[ i ] );
 		}
 
 		
-		if( vertexProperties & TANGENTS )
+		if( getVertexProperties() & TANGENTS )
 			_generateTangents();
 
-        if( vertexBuffer == 0 )
-		    glGenBuffers( 1, &vertexBuffer );
+        if( _vertexBufferHandle == 0 )
+            glGenBuffers( 1, &_vertexBufferHandle );
 
-        if( indexBuffer == 0 )
-		    glGenBuffers( 1, &indexBuffer );
+        if( _indexBufferHandle == 0 )
+            glGenBuffers( 1, &_indexBufferHandle );
 		
 
-		glBindBuffer( GL_ARRAY_BUFFER, vertexBuffer);
-        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), NULL, drawHint );
-		glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[0] );
+        glBindBuffer( GL_ARRAY_BUFFER,          _vertexBufferHandle );
+        glBufferData( GL_ARRAY_BUFFER,          sizeof( Vertex ) * _vertexList.size(), NULL, drawHint   );
+		glBufferSubData( GL_ARRAY_BUFFER, 0,    sizeof( Vertex ) * _vertexList.size(), &_vertexList[0]  );
 
 
-		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-		glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), NULL, drawHint );
-        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ] );
-
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, _indexBufferHandle );
+		glBufferData( GL_ELEMENT_ARRAY_BUFFER,          sizeof( GLuint ) * _indexList.size(), NULL, drawHint    );
+        glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, 0,    sizeof( GLuint ) * _indexList.size(), &_indexList[ 0 ]  );
 	}
 
+    void GeometryBuffer3d::bind() const
+    {
+
+        glBindBuffer( GL_ARRAY_BUFFER,          _vertexBufferHandle );
+        glBindBuffer( GL_ELEMENT_ARRAY_BUFFER,  _indexBufferHandle  );
+
+
+        glEnableVertexAttribArray( PositionTag );
+        glVertexAttribPointer( PositionTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 0 ) );
+
+        int vertexProperties = getVertexProperties();
+
+        if( vertexProperties & GG::TEXCOORDS )
+        {
+            glEnableVertexAttribArray( TexcoordTag );
+            glVertexAttribPointer( TexcoordTag, 2, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 3 * sizeof( float ) ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( TexcoordTag );
+        }
+
+        if( vertexProperties & GG::NORMALS )
+        {
+            glEnableVertexAttribArray( NormalTag );
+            glVertexAttribPointer( NormalTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 5 * sizeof( float ) ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( NormalTag );
+        }
+
+        if( vertexProperties & GG::TANGENTS )
+        {
+            glEnableVertexAttribArray( TangentTag );
+            glVertexAttribPointer( TangentTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 8 * sizeof( float ) ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( TangentTag );
+        }
+
+        if( vertexProperties & GG::BITANGENTS )
+        {
+            glEnableVertexAttribArray( BitangentTag );
+            glVertexAttribPointer( BitangentTag, 3, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 11 * sizeof( float ) ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( BitangentTag );
+        }
+
+        if( vertexProperties & GG::COLORS )
+        {
+            glEnableVertexAttribArray( ColorTag );
+            glVertexAttribPointer( ColorTag, 4, GL_FLOAT, GL_FALSE, sizeof( Vertex ), BUFFER_OFFSET( 14 * sizeof( float ) ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( ColorTag );
+        }
+    }
+
+    void GeometryBuffer3d::render( const DrawMode & drawMode ) const
+    {
+        glDrawElements( ( GLenum )drawMode, _indexList.size(), GL_UNSIGNED_INT, NULL );
+    }
+
+
+    Vertex *   GeometryBuffer3d::getVertexArray()
+    {
+        return &_vertexList[ 0 ];
+    }
+
+    uint *    GeometryBuffer3d::getIndexArray()
+    {
+        return &_indexList[ 0 ];
+    }
+
+    uint  GeometryBuffer3d::getVertexCount() const
+    {
+        return _vertexList.size();
+    }
+
+    uint  GeometryBuffer3d::getIndexCount() const
+    {
+        return _indexList.size();
+    }
+//---------------------------- Private Implementation -------------------------------------
 
 	///check 2 verticies to see if they're the same
-	bool GeometryBuffer3dImpl::_isSameVertex(const Vertex & v1, const Vertex & v2) const
+    bool GeometryBuffer3d::_isSameVertex( const Vertex & v1, const Vertex & v2 ) const
 	{
 		const float limit = 0.001f;
 
@@ -443,6 +331,7 @@ namespace GG
 								fabs( deltaPos.y ) < limit &&
 								fabs( deltaPos.z ) < limit	);
 
+        int vertexProperties = getVertexProperties();
 
 		bool texResult = true;
 		if( vertexProperties & GG::TEXCOORDS )
@@ -483,4 +372,40 @@ namespace GG
 		return posResult && texResult && normalResult && colorResult && tangentResult;
 	}
 
+    void GeometryBuffer3d::_generateIndices()
+    {
+        _indexList.clear();
+
+        VertexList  newVertList;
+        //DebugText   debugText;
+
+        for( uint i = 0; i < _vertexList.size(); ++i )
+        {
+            bool repeated = false;
+
+            ///FLip uv's for openGL
+           // _vertexList[ i ].texCoord.y = 1 - _vertexList[ i ].texCoord.y;
+
+            for( uint j = 0; j < newVertList.size(); ++j )
+            {
+
+                repeated = _isSameVertex( _vertexList[ i ], newVertList[ j ] );
+
+                if( repeated )
+                {
+                    _indexList.push_back( j );
+                    break;
+                }
+            }
+
+
+            if( !repeated )
+            {
+                newVertList.push_back( _vertexList[ i ] );
+                _indexList.push_back( newVertList.size() - 1 );
+            }
+        }
+
+        _vertexList = newVertList;
+    }
 }

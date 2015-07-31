@@ -12,8 +12,7 @@
 #include <sstream>
 #include <algorithm>
 
-#include <GLES2/gl2.h>
-#include <EGL/egl.h>
+#include <IwGL.h>
 #include <IwTypes.h>
 
 #include "GameObject.h"
@@ -219,7 +218,7 @@ namespace GG
 			_renderState.setDepthTesting( true );
 
 			
-			_renderState.setCullMode( CULL_BACK );
+            _renderState.setCullMode( CullMode::CULL_BACK );
 
 			_sortCameras();
 
@@ -237,7 +236,7 @@ namespace GG
 				int clearMode = c->getClearMode();
 
 
-				if( clearMode & CM_COLOR )
+				if( clearMode & (int)ClearMode::CM_COLOR )
 					_renderState.setClearColor( c->getClearColor() );
 
 				_renderState.clear( c->getClearMode() );
@@ -292,9 +291,9 @@ namespace GG
 					shader.setParameter( "modelViewProj", modelViewProj );
 					shader.setParameter( "modelViewMat",  modelView );
 		
-					_renderState.bindGeometry3d( mesh->getMesh() );
+					_renderState.bindVertexBuffer( mesh->getMesh() );
 
-					_renderState.renderBoundGeometry( GG::TRIANGLE_LIST );
+                    _renderState.renderBoundGeometry( DrawMode::TRIANGLE_LIST );
 				}
 			}
 
@@ -305,15 +304,15 @@ namespace GG
 			_renderState.setViewport( 0, 0, 1, 1 );
 			//glViewport( 0, 0, _deviceWidth, _deviceHeight );
 			
-			_renderState.setCullMode( CULL_NONE );
+			_renderState.setCullMode( CullMode::CULL_NONE );
 
 			_renderState.setDepthTesting( false );
 
 			_renderState.bindShader( *_fullScreenShader );
 			_renderState.bindTexture2d( 0, _frameBufferObject.getColorTexture() );
-			_renderState.bindGeometry3d( _fullScreenQuad );
+			_renderState.bindVertexBuffer( _fullScreenQuad );
 
-			_renderState.renderBoundGeometry( GG::TRIANGLE_LIST );
+            _renderState.renderBoundGeometry( DrawMode::TRIANGLE_LIST );
 
 		}
 
