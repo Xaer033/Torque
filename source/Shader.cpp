@@ -122,37 +122,35 @@ namespace GG
 		}
 
 
-		GLuint loadShader( const char * shaderSrc, GLenum type )
+		bool loadShader( GLuint * shader, const char * shaderSrc, GLenum type )
 		{
-			GLuint shader;
 			GLint compiled;
 			// Create the shader object
-			shader = glCreateShader( type );
-			if( shader == 0 )
-				return 0;
+            if( *shader == 0 )
+			    *shader = glCreateShader( type );
 
 			// Load the shader source
 			std::vector< const char * > shaderStrings;
 			shaderStrings.insert( shaderStrings.end(), defineList.begin(), defineList.end() );
 			shaderStrings.push_back( shaderSrc );
 
-			glShaderSource( shader, shaderStrings.size(), &shaderStrings[0], NULL );
+			glShaderSource( *shader, shaderStrings.size(), &shaderStrings[0], NULL );
 			
 
 			// Compile the shader
-			glCompileShader( shader );
+			glCompileShader( *shader );
 			// Check the compile status
-			glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
+			glGetShaderiv( *shader, GL_COMPILE_STATUS, &compiled );
 
 			if( !compiled )
 			{
 				GLint infoLen = 0;
-				glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
+				glGetShaderiv( *shader, GL_INFO_LOG_LENGTH, &infoLen );
 
 				if( infoLen > 1 )
 				{
 					char * infoLog = (char*)malloc( sizeof(char) * infoLen );
-					glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+					glGetShaderInfoLog(*shader, infoLen, NULL, infoLog);
 					
 					std::stringstream stream;
 					stream << "Error Compiling shader: " << infoLog;
@@ -161,12 +159,10 @@ namespace GG
 					free( infoLog );
 				}
 
-				glDeleteShader( shader );
-				return 0;
+				glDeleteShader( *shader );
+				return false;
 			}
-
-
-			return shader;
+            return true;
 		}
 
 
@@ -189,18 +185,19 @@ namespace GG
 
 		bool compile( const char * vertexShader, const char * pixelShader )
 		{
-			int linked		= 0;
+			int linked	= 0;
 
-			vertexHandle	= loadShader( vertexShader, GL_VERTEX_SHADER );
-			pixelHandle		= loadShader( pixelShader, GL_FRAGMENT_SHADER );
+			loadShader( &vertexHandle,  vertexShader,   GL_VERTEX_SHADER    );
+			loadShader( &pixelHandle,   pixelShader,    GL_FRAGMENT_SHADER  );
 			
 			if( programHandle == 0 )
+            { 
 				programHandle	= glCreateProgram();
+            }
 
 			glAttachShader( programHandle, vertexHandle );
 			glAttachShader( programHandle, pixelHandle );
 
-			// Bind vPosition to attribute 0
 			bindAllAttributes();
 
 			// Link the program

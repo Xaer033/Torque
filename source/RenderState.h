@@ -19,7 +19,7 @@ namespace GG
 
 
 
-    enum class BlendMode
+    enum BlendMode
 	{
 		BM_NONE     = 0,
 		BM_ALPHA,
@@ -35,7 +35,7 @@ namespace GG
 		CM_STENCIL	= GL_STENCIL_BUFFER_BIT
 	};
 
-    enum class CullMode
+    enum CullMode
 	{
 		CULL_NONE   = 0,
 		CULL_FRONT	= GL_FRONT,

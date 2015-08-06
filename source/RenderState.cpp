@@ -93,7 +93,7 @@ namespace GG
 			if( _cachedCullMode == cullMode )
 				return;
 
-            if( cullMode == CullMode::CULL_NONE )
+            if( cullMode == CULL_NONE )
 			{
 				glDisable( GL_CULL_FACE );
 			}
@@ -115,7 +115,7 @@ namespace GG
 			_cachedBlendmode = mode;
 
 
-            if( mode == BlendMode::BM_NONE )
+            if( mode == BM_NONE )
 			{
 				glDisable( GL_BLEND );
 				return;
@@ -126,10 +126,10 @@ namespace GG
 
 			switch( mode )
 			{
-                case BlendMode::BM_ALPHA:		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );	break;
-				case BlendMode::BM_ADDITIVE:	glBlendFunc( GL_SRC_ALPHA, GL_ONE );					break;
-                case BlendMode::BM_MULTIPLY:	glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );	break;
-                case BlendMode::BM_SCREEN:		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );			break;
+                case BM_ALPHA:		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );	break;
+				case BM_ADDITIVE:	glBlendFunc( GL_SRC_ALPHA, GL_ONE );					break;
+                case BM_MULTIPLY:	glBlendFunc( GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA );	break;
+                case BM_SCREEN:		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_COLOR );			break;
 			}
 		}
 
@@ -210,7 +210,7 @@ namespace GG
 
 			_cachedFrameBuffer	= 0;
 
-			_cachedCullMode		= CullMode::CULL_BACK;
+			_cachedCullMode		= CULL_BACK;
 
 			_renderWidth		= IwGLGetInt( IW_GL_WIDTH );
 			_renderHeight		= IwGLGetInt( IW_GL_HEIGHT );

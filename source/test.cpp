@@ -1,6 +1,8 @@
 #include <IwGL.h>
 #include <IwUtil.h>
+#include <IwRandom.h>
 #include <s3e.h>
+#include <algorithm>
 
 #include <s3ePointer.h>
 #include <stdio.h>
@@ -24,9 +26,12 @@
 #include <spine/spine.h>
 #include <spine/extension.h>
 
+
+const int kMaxCharacters = 800;
+
 void _spAtlasPage_createTexture (spAtlasPage* self, const char* path) 
 {
-    GG::Texture *texture = new GG::Texture();
+    GG::Texture * texture = new GG::Texture();
     texture->loadFromFile( path );
 
     self->rendererObject = (void*)texture;
@@ -36,21 +41,22 @@ void _spAtlasPage_createTexture (spAtlasPage* self, const char* path)
 
 void _spAtlasPage_disposeTexture (spAtlasPage* self)
 {
-  if (self->rendererObject)
-    delete( static_cast< GG::Texture * >( self->rendererObject ) );
-
+	if (self->rendererObject)
+	{ 
+		delete( static_cast< GG::Texture * >( self->rendererObject ) );
+	}
 }
 
 char* _spUtil_readFile( const char* path, int* length )
 {
-  s3eFile *f = s3eFileOpen(path, "rb");
-  if (f)
-  {
-    *length = s3eFileGetSize(f);
-    char *buffer = (char *)malloc(*length);
-    *length = s3eFileRead(buffer, 1, *length, f);
-    return buffer;
-  }
+	s3eFile *f = s3eFileOpen( path, "rb" );
+	if( f )
+	{
+		*length = s3eFileGetSize( f );
+		char *	buffer = (char *)malloc( *length );
+		*length = s3eFileRead( buffer, 1, *length, f );
+		return buffer;
+	}
 
   return  NULL;
 }
@@ -65,8 +71,19 @@ spSkeletonBounds* bounds = NULL;
 spSlot* headSlot = NULL;        // spineboy's head
 uint64 lastFrameTime = 0;
 
+
+GG::RenderState renderState;
+
+
 GG::Camera camera;
 GG::IVertexBuffer * geometry = NULL;
+float * worldVertex;
+
+Vector4 funColor;
+GG::Shader * unlitShader = NULL;
+Vector3 startPosition;
+
+std::vector< GG::Transform > transformList( kMaxCharacters );
 
 void SpineBoy()
 {
@@ -114,7 +131,7 @@ void Goblins () {
     IwTrace(SPINE, ("First page name: %s, size: %d, %d\n", atlas->pages->name, atlas->pages->width, atlas->pages->height));
 
     spSkeletonJson* json = spSkeletonJson_create(atlas);
-    json->scale = 1.0f;
+    json->scale = 0.01f;
     skeletonData = spSkeletonJson_readSkeletonDataFile(json, "spine/goblins-ffd.json");
     if (!skeletonData) IwAssertMsg(SPINE, false, ("Error: %s\n", json->error));
     spAnimation* walkAnimation = spSkeletonData_findAnimation(skeletonData, "walk");
@@ -129,7 +146,7 @@ void Goblins () {
     spSkeleton_setSlotsToSetupPose(skeleton);
     //Skeleton_setAttachment(skeleton, "left hand item", "dagger");
 
-    skeleton->x = 150;
+	skeleton->x = 0;
     skeleton->y = 0;
     spSkeleton_updateWorldTransform(skeleton);
 
@@ -157,16 +174,17 @@ std::string loadFile( const char * filename )
 
 bool initShader( GG::Shader ** shader, const std::string & shaderName )
 {
-
-    if( *shader )
-        delete *shader;
+	if( *shader != NULL )
+	{
+		delete( *shader );
+	}
 
     *shader = new GG::Shader();
 
 
-    ( *shader )->addDefinition( "#define USE_NORMALMAP \n" );
+   // ( *shader )->addDefinition( "#define USE_NORMALMAP \n" );
 
-    std::string directory = "shaders/";
+    const std::string directory = "shaders/";
 
     std::string vShaderStr = loadFile( ( directory + shaderName + std::string( ".vs" ) ).c_str() );
     std::string fShaderStr = loadFile( ( directory + shaderName + std::string( ".ps" ) ).c_str() );
@@ -174,18 +192,49 @@ bool initShader( GG::Shader ** shader, const std::string & shaderName )
 
     ( *shader )->bindAttribute( GG::PositionTag,    "vPosition"     );
     ( *shader )->bindAttribute( GG::TexcoordTag,    "vTexcoord"     );
-    ( *shader )->bindAttribute( GG::NormalTag,      "vNormal"       );
-    ( *shader )->bindAttribute( GG::TangentTag,     "vTangent"      );
-    ( *shader )->bindAttribute( GG::BitangentTag,   "vBitangent"    );
+    //( *shader )->bindAttribute( GG::NormalTag,      "vNormal"       );
+   //( *shader )->bindAttribute( GG::TangentTag,     "vTangent"      );
+    //( *shader )->bindAttribute( GG::BitangentTag,   "vBitangent"    );
     ( *shader )->bindAttribute( GG::ColorTag,       "vColor"        );
 
     ( *shader )->compile( vShaderStr.c_str(), fShaderStr.c_str() );
 
-
     return true;
 }
 
+bool sortTransform( const GG::Transform & a, const GG::Transform & b )
+{
+	float	d1 = glm::distance( a.getPosition( GG::WORLD ), camera.transform.getPosition( GG::WORLD ) );
+	float	d2 = glm::distance( b.getPosition( GG::WORLD ), camera.transform.getPosition( GG::WORLD ) );
 
+	return d1 > d2;
+}
+
+void setupTransforms()
+{
+	float xPos = -20.0f;
+	float zPos = 0;
+
+	for( int i = 0; i < kMaxCharacters; ++i )
+	{
+		GG::Transform t;
+
+		if( i % 100 == 0 )
+		{
+			xPos += 5.0f;
+			zPos = 0;
+		}
+
+		zPos -= 1.0f * 1.0f;
+
+		Vector3 position = Vector3( xPos, 0, zPos );
+		t.setPosition( position );
+		transformList.push_back( t );
+	}
+
+	std::sort( transformList.begin(), transformList.end(), sortTransform );
+	
+}
 
 void init() 
 {
@@ -205,16 +254,23 @@ void init()
     int width   = IwGLGetInt( IW_GL_WIDTH );
     int height  = IwGLGetInt( IW_GL_HEIGHT );
     
-    camera.setPerspective( 45, ( float )width, ( float )height, 0.01f, 1000 );
+    camera.setPerspective( 60, ( float )width, ( float )height, 0.01f, 1000 );
 
     camera.setViewport( 0, 0, 1, 1 );
     camera.setClearColor( Vector4( 0.3f, 0.6f, 0.4f, 1.0f ) );
     camera.setClearMode( GG::CM_COLOR | GG::CM_DEPTH );
-    camera.transform.setPosition( Vector3( 0, 0, 500) );
+
+	startPosition = Vector3( 0, 4, 15 );
+    camera.transform.setPosition( startPosition );
     camera.transform.lookAt( Vector3( 0 ) );
 
-    geometry = new GG::StreamVertexBuffer();
+    geometry	= new GG::StreamVertexBuffer();
+    worldVertex = new float[ 1000 ];
 
+     
+    initShader( &unlitShader, "unlit" );
+   
+	setupTransforms();
 
  // SpineBoy();
   Goblins();
@@ -224,20 +280,22 @@ void init()
 
 void release()
 {
-  if (bounds) spSkeletonBounds_dispose(bounds);
-  if (stateData) spAnimationStateData_dispose(stateData);
+  if (bounds)		spSkeletonBounds_dispose(bounds);
+  if (stateData)	spAnimationStateData_dispose(stateData);
+
   spAnimationState_dispose(state);
   spSkeleton_dispose(skeleton);
   spSkeletonData_dispose(skeletonData);
   spAtlas_dispose(atlas);
 
-  if( geometry )
-      delete( geometry );
+  if( geometry )	delete( geometry );
 
-  //IwGxTerminate();
+  if( worldVertex ) delete[]( worldVertex );
+
 }
 
-bool update() {
+bool update() 
+{
   float dt = (float)(s3eTimerGetMs() - lastFrameTime) / 1000.f;
   lastFrameTime = s3eTimerGetMs();
 
@@ -311,32 +369,23 @@ void makeSuperSquare( GG::GeometryBuffer3d & buffer )
 
 void draw( GG::Transform transform ) 
 {
-//  IwGxSetColClear(0, 0, 0, 0);
- /// Clear the screen
-  //IwGxClear(IW_GX_COLOUR_BUFFER_F | IW_GX_DEPTH_BUFFER_F);
-  // Draw screen space in the back so 3D sprites are visible
-  //IwGxSetScreenSpaceSlot(-1);
-    GG::RenderState renderState;
+  //  GG::Texture * lastTexture = NULL;
+   // GG::BlendMode lastBlend   = GG::BlendMode::BM_ALPHA;
 
-    renderState.setClearColor( camera.getClearColor() );
-    renderState.clear( camera.getClearMode() );
+    
+    for (int i = 0; i < skeleton->slotsCount; ++i)
+    {
 
-  GG::Texture * lastTexture = NULL;
-  GG::BlendMode lastBlend   = GG::BlendMode::BM_ALPHA;
+      spSlot* slot = skeleton->slots[i];
+      spAttachment* attachment = slot->attachment;
+      if (!attachment) continue;
 
-  geometry->clearVertices();
-  geometry->setVertexProperties( GG::VertexProperty::TEXCOORDS | GG::VertexProperty::COLORS );
+      GG::Texture * texture = NULL;
+	  GG::BlendMode blend = ( slot->data->blendMode == SP_BLEND_MODE_ADDITIVE ) ? 
+                                GG::BM_ADDITIVE : GG::BM_ALPHA;
 
-  for (int i = 0; i < skeleton->slotsCount; ++i)
-  {
 
-    spSlot* slot = skeleton->slots[i];
-    spAttachment* attachment = slot->attachment;
-    if (!attachment) continue;
-
-    GG::Texture * texture = NULL;
-	GG::BlendMode blend = ( slot->data->blendMode == SP_BLEND_MODE_ADDITIVE ) ? 
-                                GG::BlendMode::BM_ADDITIVE : GG::BlendMode::BM_ALPHA;
+      renderState.setBlendmode( blend );
 
     int num_vertices = 0;
 
@@ -354,35 +403,36 @@ void draw( GG::Transform transform )
         // verts = IW_GX_ALLOC(CIwSVec2, num_vertices);
         //  colors = IW_GX_ALLOC(CIwColour, num_vertices);
 
-        float worldVertices[ 8 ];
         spRegionAttachment* regionAttachment = ( spRegionAttachment* )attachment;
         texture = static_cast< GG::Texture* >( ( ( spAtlasRegion* )regionAttachment->rendererObject )->page->rendererObject );
-        spRegionAttachment_computeWorldVertices( regionAttachment, slot->bone, worldVertices );
+
+        renderState.bindTexture2d( 0, *texture );
+        spRegionAttachment_computeWorldVertices( regionAttachment, slot->bone, worldVertex );
 
         float r = ( skeleton->r * slot->r );
         float g = ( skeleton->g * slot->g );
         float b = ( skeleton->b * slot->b );
         float a = ( skeleton->a * slot->a );
 
-        geometry->pushColor( Vector4( r, g, b, a ) );
+        geometry->pushColor( Vector4( r, g, b, a ) * funColor );
 
        
         geometry->pushTexCoord( Vector2(regionAttachment->uvs[ 0 ], regionAttachment->uvs[ 1 ] ) );
-        geometry->addPosition( Vector3( worldVertices[ 0 ], worldVertices[ 1 ], 0.0f )  );
+        geometry->addPosition( transform.transformPoint(  Vector3( worldVertex[ 0 ], worldVertex[ 1 ], 0.0f ) ));
 
         geometry->pushTexCoord( Vector2( regionAttachment->uvs[ 2 ], regionAttachment->uvs[ 3 ] ) );
-        geometry->addPosition( Vector3( worldVertices[ 2 ], worldVertices[ 3 ], 0.0f ) );
+        geometry->addPosition( transform.transformPoint(  Vector3( worldVertex[ 2 ], worldVertex[ 3 ], 0.0f ) ));
 
         geometry->pushTexCoord( Vector2( regionAttachment->uvs[ 4 ], regionAttachment->uvs[ 5 ] ) );
-        geometry->addPosition( Vector3( worldVertices[ 4 ], worldVertices[ 5 ], 0.0f ) );
+        geometry->addPosition( transform.transformPoint(  Vector3( worldVertex[ 4 ], worldVertex[ 5 ], 0.0f ) ));
        
-        geometry->addPosition( Vector3( worldVertices[ 4 ], worldVertices[ 5 ], 0.0f ) );
+        geometry->addPosition( transform.transformPoint( Vector3( worldVertex[ 4 ], worldVertex[ 5 ], 0.0f ) ));
 
         geometry->pushTexCoord( Vector2( regionAttachment->uvs[ 6 ], regionAttachment->uvs[ 7] ) );
-        geometry->addPosition( Vector3( worldVertices[ 6 ], worldVertices[ 7 ], 0.0f )  );
+        geometry->addPosition( transform.transformPoint(  Vector3( worldVertex[ 6 ], worldVertex[ 7 ], 0.0f ) ));
 
         geometry->pushTexCoord( Vector2( regionAttachment->uvs[ 0 ], regionAttachment->uvs[ 1 ] ) );
-        geometry->addPosition( Vector3( worldVertices[ 0 ], worldVertices[ 1 ], 0.0f ) );
+        geometry->addPosition( transform.transformPoint(  Vector3( worldVertex[ 0 ], worldVertex[ 1 ], 0.0f ) ));
 
         
     }
@@ -393,27 +443,25 @@ void draw( GG::Transform transform )
         num_vertices = mesh->trianglesCount;
 
         
-        float *worldVertices = new float[mesh->verticesCount];
         texture = static_cast<GG::Texture*>(((spAtlasRegion*)mesh->rendererObject)->page->rendererObject);
 
-        spMeshAttachment_computeWorldVertices(mesh, slot, worldVertices);
+        renderState.bindTexture2d( 0, *texture );
+        spMeshAttachment_computeWorldVertices( mesh, slot, worldVertex );
 
         float r = ( skeleton->r * slot->r );
         float g = ( skeleton->g * slot->g );
         float b = ( skeleton->b * slot->b );
         float a = ( skeleton->a * slot->a );
 
-        geometry->pushColor( Vector4( r, g, b, a ) );
+        geometry->pushColor( Vector4( r, g, b, a )  * funColor );
 
         for (int i = 0; i < mesh->trianglesCount; ++i)
         {
             int index = mesh->triangles[i] << 1;
 
             geometry->pushTexCoord( Vector2( mesh->uvs[ index ], mesh->uvs[ index + 1 ] ) );
-            geometry->addPosition( Vector3( worldVertices[ index ], worldVertices[ index + 1 ], 0.0f ) );
+            geometry->addPosition( transform.transformPoint( Vector3( worldVertex[ index ], worldVertex[ index + 1 ], 0.0f ) ) );
         }
-
-        delete[] worldVertices;
     }
     else if (attachment->type == SP_ATTACHMENT_SKINNED_MESH)
     {
@@ -421,112 +469,104 @@ void draw( GG::Transform transform )
        
         num_vertices = mesh->trianglesCount;
 
-        float *worldVertices = new float[mesh->uvsCount];
         texture = static_cast<GG::Texture*>(((spAtlasRegion*)mesh->rendererObject)->page->rendererObject);
 
-        spSkinnedMeshAttachment_computeWorldVertices(mesh, slot, worldVertices);
+        spSkinnedMeshAttachment_computeWorldVertices( mesh, slot, worldVertex );
 
         float r = ( skeleton->r * slot->r );
         float g = ( skeleton->g * slot->g );
         float b = ( skeleton->b * slot->b );
         float a = ( skeleton->a * slot->a );
 
-        geometry->pushColor( Vector4( r, g, b, a ) );
+        geometry->pushColor( Vector4( r, g, b, a )  * funColor );
 
         for( int i = 0; i < mesh->trianglesCount; ++i )
         {
             int index = mesh->triangles[ i ] << 1;
 
             geometry->pushTexCoord( Vector2( mesh->uvs[ index ], mesh->uvs[ index + 1 ] ) );
-            geometry->addPosition( Vector3( worldVertices[ index ], worldVertices[ index + 1 ], 0.0f ) );
+            geometry->addPosition( transform.transformPoint( ( Vector3( worldVertex[ index ], worldVertex[ index + 1 ], 0.0f ) ) ));
         }
 
-        delete[] worldVertices;
     }
 
     IwAssert(SPINE, texture);
-    if (!texture) return;
-
-
-    // primitive caching of the material texture
-    if( lastTexture != texture || lastBlend != blend )
-    {
-      
-        renderState.bindTexture2d( 0, *texture );
-        renderState.setDepthTesting( false );
-
-        renderState.setBlendmode( blend );
-        renderState.setCullMode( GG::CullMode::CULL_NONE );
-
-        lastTexture = texture;
-        lastBlend = blend;
-    }
-
-    
   }
-
-  static GG::Shader * shader = NULL;
-
-  if( !shader )
-  {
-      shader = new GG::Shader();
-
-      if( !initShader( &shader, "unlit" ) )
-      {
-          delete( shader );
-          return;
-      }
-  }
-
-    geometry->build( GG::D_DYNAMIC );
-  
-
-  //t.setPosition( Vector3( -200, -200, 0 ) );
- // t.rotate( 100.0f , t.up );
- // renderState.bindGeometry3d( *geometry );
-  renderState.bindVertexBuffer( *geometry );
-  renderState.bindShader( *shader );
-
-  shader->setParameterSampler( "mainTex", 0 );
-  shader->setParameter( "modelViewProj", camera.getModelViewProjection( transform ) );
-
-  renderState.renderBoundGeometry( GG::DrawMode::TRIANGLE_LIST );
- // geometry->render( GG::TRIANGLE_LIST );
-
-
-
-
-
-  // Call IwGL swap instead of egl directly
-  IwGLSwapBuffers();
-
-  // Sleep for 0ms to allow the OS to process events etc.
-  s3eDeviceYield( 0 );
 }
 
-S3E_MAIN_DECL void IwMain() {
+S3E_MAIN_DECL void IwMain()
+{
 
   init();
-  GG::Transform t;
 
   // Main Game Loop
-  while (!s3eDeviceCheckQuitRequest())
+  while( !s3eDeviceCheckQuitRequest() )
   {
+      //Update the input systems
+      s3eKeyboardUpdate();
+      s3ePointerUpdate();
+
       GG::Time::update();
 
-    // Yield to the operating system
-    s3eDeviceYield(0);
+      // Prevent back-light to off state
+      s3eDeviceBacklightOn();
 
-    // Prevent back-light to off state
-    s3eDeviceBacklightOn();
+      // Update the game
+      if( !update() )
+      {
+          break;
+      }
+      
+      if( s3eKeyboardGetState( s3eKeyR ) & S3E_KEY_STATE_RELEASED )
+      {
+          initShader( &unlitShader, "unlit" );
+      }
 
-    // Update the game
-    if (!update())
-      break;
-    t.setPosition( Vector3( -200, -200, 0) );
-  //  t.rotate( 100.0f * GG::Time::getDeltaTime(), Vector3( 0, 0, 1 ) );
-    // Draw the scene
-    draw( t );
+
+      
+
+      renderState.setClearColor( camera.getClearColor() );
+      renderState.clear( camera.getClearMode() );
+
+
+      renderState.bindShader( *unlitShader );
+
+      geometry->clearVertices();
+      geometry->setVertexProperties( GG::TEXCOORDS | GG::COLORS );
+
+     
+      renderState.setDepthTesting( false );
+      renderState.setCullMode( GG::CULL_NONE );
+      
+	  Vector4 white = Vector4( 1, 1, 1, 1 );
+      unlitShader->setParameterSampler( "mainTex", 0 );
+      unlitShader->setParameter( "tintColor", white );
+      unlitShader->setParameter( "modelViewProj", camera.getProjectionMatrix() * camera.getViewMatrix() );
+	  
+	  static float mover = 0;
+
+	  mover +=  GG::Time::getDeltaTime();
+
+	  Vector3 newPosition = startPosition + Vector3( cosf( mover ), 0, 0 ) * 10.0f;
+
+	  camera.transform.setPosition( newPosition );
+	  camera.transform.lookAt( Vector3( 0 ) );
+
+      for( int i = 0; i < kMaxCharacters; ++i )
+      {
+            funColor = Vector4( fabs( cos( i )), fabs( sin( i )), fabs( cos( -i )), 1.0f );
+			draw( transformList[ i ] );
+      }
+   
+      geometry->build( GG::D_DYNAMIC );
+      renderState.bindVertexBuffer( *geometry );
+
+    renderState.renderBoundGeometry( GG::TRIANGLE_LIST );
+    // Call IwGL swap instead of egl directly
+    IwGLSwapBuffers();
+
+    // Sleep for 0ms to allow the OS to process events etc.
+    s3eDeviceYield( 0 );
   }
 
   release();

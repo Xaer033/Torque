@@ -4,14 +4,11 @@ uniform sampler2D mainTex;
 uniform vec4 tintColor;
 
 varying vec2 uv;
-varying vec4 color;
+varying vec4 vertColor;
 
 
 void main()
 { 
-    vec2 newUV = uv;
-    newUV.y = uv.y;
-
-	vec4 texColor = texture2D( mainTex, newUV );
-	gl_FragColor = texColor * color;// * tintColor;
+	vec4 texColor = texture2D( mainTex, uv );
+	gl_FragColor = texColor * vertColor * tintColor;
 }

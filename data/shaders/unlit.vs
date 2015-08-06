@@ -6,13 +6,12 @@ attribute vec2 vTexcoord;
 attribute vec4 vColor;
 
 varying vec2 uv; 
-varying vec4 color;
+varying vec4 vertColor;
 
 void main() 
 { 
 	gl_Position =	modelViewProj * vPosition; 
 
-	uv      = vTexcoord; 
-    color   = vColor;
-    color.rg *= uv;
+	uv          = vTexcoord; 
+    vertColor   = vColor;
 } 

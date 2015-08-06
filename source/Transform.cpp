@@ -5,7 +5,8 @@
 
 #include <list>	
 
-#include "Matrix.h"
+#include <Matrix.h>
+#include <Quaternion.h>
 #include "glm/gtx/transform.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -86,7 +87,6 @@ namespace GG
 		}
 
 		_updateHierarchy( );
-
 	}
 
 	Transform * Transform::getParent()
@@ -161,6 +161,7 @@ namespace GG
 
 	void Transform::setAxisAngle( float angle, const Vector3 & axis )
 	{
+     
 		glm::mat4 rotateMat = glm::rotate( angle, axis );
 
 		//Set rotation component only
@@ -208,6 +209,7 @@ namespace GG
 
 	void Transform::rotate( float angle, const Vector3 & axis, Space rotateSpace )
 	{
+		//glm::rotate()
 		_modelMat = glm::rotate( _modelMat, angle, axis );
 
 		_updateHierarchy( );
@@ -221,10 +223,36 @@ namespace GG
 	}
 
 
-	void Transform::inverse()
+	Matrix4 Transform::inverse() const
 	{
-		_modelMat = glm::inverse( _modelMat );
+        return _inverseMat;
 	}
+
+
+    Vector3 Transform::transformPoint( const Vector3 & point )
+    {
+        Vector4 newPoint =  _worldMat * Vector4( point, 1.0f );
+        return Vector3( newPoint );
+    }
+
+    Vector3 Transform::transformDirection( const Vector3 & direction )
+    {
+        Vector4 newPoint = _worldMat * Vector4( direction, 0.0f );
+        return Vector3( newPoint );
+    }
+    Vector3 Transform::inverseTransformPoint( const Vector3 & point )
+    {
+        Vector4 newPoint = _inverseMat * Vector4( point, 1.0f );
+        return Vector3( newPoint );
+    }
+    Vector3 Transform::inverseTransformDirection( const Vector3 & direction )
+    {
+        Vector4 newPoint = _inverseMat * Vector4( direction, 0.0f );
+        return Vector3( newPoint );
+    }
+
+
+//--------------------------------- Private Implementation -------------------------------
 
 	void Transform::_updateHierarchy( )
 	{
@@ -232,6 +260,8 @@ namespace GG
 			_worldMat =  _parent->getMatrix() * _modelMat;
 		else
 			_worldMat = _modelMat;
+
+        _inverseMat = glm::inverse( _worldMat );
 
 		_updateChildren();
 	}

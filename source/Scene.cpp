@@ -218,7 +218,7 @@ namespace GG
 			_renderState.setDepthTesting( true );
 
 			
-            _renderState.setCullMode( CullMode::CULL_BACK );
+            _renderState.setCullMode( CULL_BACK );
 
 			_sortCameras();
 
@@ -236,7 +236,7 @@ namespace GG
 				int clearMode = c->getClearMode();
 
 
-				if( clearMode & (int)ClearMode::CM_COLOR )
+				if( clearMode & (int)CM_COLOR )
 					_renderState.setClearColor( c->getClearColor() );
 
 				_renderState.clear( c->getClearMode() );
@@ -293,7 +293,7 @@ namespace GG
 		
 					_renderState.bindVertexBuffer( mesh->getMesh() );
 
-                    _renderState.renderBoundGeometry( DrawMode::TRIANGLE_LIST );
+                    _renderState.renderBoundGeometry( TRIANGLE_LIST );
 				}
 			}
 
@@ -304,7 +304,7 @@ namespace GG
 			_renderState.setViewport( 0, 0, 1, 1 );
 			//glViewport( 0, 0, _deviceWidth, _deviceHeight );
 			
-			_renderState.setCullMode( CullMode::CULL_NONE );
+			_renderState.setCullMode( CULL_NONE );
 
 			_renderState.setDepthTesting( false );
 
@@ -312,7 +312,7 @@ namespace GG
 			_renderState.bindTexture2d( 0, _frameBufferObject.getColorTexture() );
 			_renderState.bindVertexBuffer( _fullScreenQuad );
 
-            _renderState.renderBoundGeometry( DrawMode::TRIANGLE_LIST );
+            _renderState.renderBoundGeometry( TRIANGLE_LIST );
 
 		}
 

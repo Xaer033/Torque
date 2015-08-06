@@ -16,10 +16,10 @@
 # Some conditional operations are also permitted, see the
 # S3E documentation for details.
 [S3E]
-MemSize 	= 40000000
+MemSize 	= 200000000
 DispFixRot 	= Landscape
 
-WinWidth=1024
+WinWidth=1140
 WinHeight=768
 
 [GL]

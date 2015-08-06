@@ -3,7 +3,7 @@
 
 namespace GG
 {
-	Quaternion identityQuat = Quaternion( 1, 0, 0, 0 );
+	Quaternion identity = Quaternion( 1, 0, 0, 0 );
 
 
 

@@ -23,7 +23,7 @@ namespace GG
 {
 	typedef glm::quat Quaternion;
 	
-	extern Quaternion identityQuat;
+	extern Quaternion identity;
 }
 
 
